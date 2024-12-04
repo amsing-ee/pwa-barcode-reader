@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ZXing-js Data Matrix Decoder</title>
+  <script src="https://cdn.jsdelivr.net/npm/@zxing/library@latest"></script>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      text-align: center;
+      margin: 20px;
+    }
+    video, img {
+      width: 100%;
+      max-width: 400px;
+      margin: 10px auto;
+    }
+    #output {
+      margin-top: 20px;
+    }
+  </style>
+</head>
+<body>
+  <h1>ZXing-js Data Matrix Decoder</h1>
+
+  <!-- Video element for live scanning -->
+  <video id="video" autoplay></video>
+
+  <!-- File input for image scanning -->
+  <input type="file" id="file-input" accept="image/*">
+  <img id="image-preview" alt="Image Preview" />
+
+  <!-- Output -->
+  <div id="output">
+    <h3>Decoded Text:</h3>
+    <p id="decoded-text">No result yet.</p>
+  </div>
+
+  <script>
+    const { BrowserMultiFormatReader } = ZXing;
+
+    // Function to decode from live video
+    async function decodeFromVideo() {
+      const codeReader = new BrowserMultiFormatReader();
+      const videoElement = document.getElementById('video');
+      
+      try {
+        await codeReader.decodeFromVideoDevice(null, videoElement, (result, err) => {
+          if (result) {
+            document.getElementById('decoded-text').textContent = result.text;
+          } else if (err) {
+            console.error(err);
+          }
+        });
+      } catch (e) {
+        console.error('Error accessing camera: ', e);
+      }
+    }
+
+    // Function to decode from an uploaded image
+    function decodeFromImage(file) {
+      const codeReader = new BrowserMultiFormatReader();
+      const imgElement = document.getElementById('image-preview');
+      const outputElement = document.getElementById('decoded-text');
+
+      const reader = new FileReader();
+      reader.onload = () => {
+        imgElement.src = reader.result;
+        codeReader.decodeFromImage(imgElement)
+          .then(result => {
+            outputElement.textContent = result.text;
+          })
+          .catch(err => {
+            console.error(err);
+            outputElement.textContent = 'No barcode found.';
+          });
+      };
+      reader.readAsDataURL(file);
+    }
+
+    // Start video scanning on page load
+    decodeFromVideo();
+
+    // Handle file input for image scanning
+    document.getElementById('file-input').addEventListener('change', (event) => {
+      const file = event.target.files[0];
+      if (file) {
+        decodeFromImage(file);
+      }
+    });
+  </script>
+</body>
+</html>
